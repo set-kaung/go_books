@@ -22,16 +22,21 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 	file, err := os.OpenFile("cache.json", os.O_WRONLY, 0644)
 	if err != nil {
 		http.Error(w, "can't find cache file", http.StatusInternalServerError)
+		return
 	}
 	defer file.Close()
+	log.Println("api request started")
 	res, err := app.Service.Files.List().Q("trashed=false").Fields("nextPageToken, files(id, name, webContentLink)").Do()
 	if err != nil {
 		http.Error(w, "no response from api", http.StatusInternalServerError)
+		return
 	}
+	log.Println("api request ended")
 
 	encoder := json.NewEncoder(file)
 	if len(res.Files) == 0 {
 		http.Error(w, "empty file list from api", http.StatusInternalServerError)
+		return
 	}
 	pageToken := ""
 	files := []File{}
@@ -39,6 +44,7 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 		res, err := app.Service.Files.List().Q("trashed=false").PageToken(pageToken).Fields("nextPageToken, files(id, name, webContentLink)").Do()
 		if err != nil {
 			http.Error(w, "no response from api", http.StatusInternalServerError)
+			return
 		}
 
 		for _, f := range res.Files {
@@ -57,7 +63,9 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 	err = encoder.Encode(map[string][]File{"files": files})
 	if err != nil {
 		http.Error(w, "error encoding json", http.StatusInternalServerError)
+		return
 	}
+	log.Println("caching finished")
 }
 
 func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
@@ -72,17 +80,11 @@ func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error opening JSON file: %v", err)
 		return
 	}
-	files := map[string][]File{}
-	err = json.Unmarshal(file, &files)
+	w.Header().Set("content-type", "application/json")
+	written, err := w.Write(file)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Error unmarshaling", http.StatusInternalServerError)
+		http.Error(w, "error writing json data", http.StatusInternalServerError)
 		return
 	}
-
-	encoder := json.NewEncoder(w)
-	err = encoder.Encode(files)
-	if err != nil {
-		log.Println("encoding files json:", err)
-	}
+	log.Printf("written %d as response\n", written)
 }
