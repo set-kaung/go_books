@@ -32,7 +32,6 @@
                 return response.json();
             })
             .then((obj) => {
-                console.log(obj);
                 files = obj["files"];
             })
             .catch((err) => console.log(err))
