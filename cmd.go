@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 func openBrowser(url string) error {
@@ -52,7 +53,7 @@ func Run(app *Application) {
 	if err != nil {
 		panic(err)
 	}
-	str = str[:len(str)-1]
+	str = strings.TrimSuffix(str, "\n")
 	index, err := strconv.ParseInt(str, 10, 64)
 	if err != nil || (index < 1 || index > int64(len(r.Files))) {
 		log.Fatalln("error: enter valid number:")
