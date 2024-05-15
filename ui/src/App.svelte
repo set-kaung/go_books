@@ -13,6 +13,7 @@
     });
 
     function UpdateCache() {
+        isLoading = true;
         fetch("/cache")
             .then((resp) => {
                 if (!resp.ok) {
@@ -32,8 +33,8 @@
                 } else {
                     isError = false;
                 }
-            });
-        FetchFiles();
+            })
+            .finally(() => FetchFiles());
     }
 
     function FetchFiles() {
@@ -66,9 +67,14 @@
     }
 </script>
 
-{#if isLoading}
-    <p>Loading...</p>
-{:else if isError}
+<div class="container">
+    <div class="search-bar">
+        <label for="search">Search: </label>
+        <input type="text" bind:value={search_term} id="search" />
+        <button on:click={UpdateCache}>Update Cache</button>
+    </div>
+</div>
+{#if isError}
     <div>
         <div class="message">
             <h2>{message}</h2>
@@ -77,13 +83,10 @@
             <h3>{error}</h3>
         </div>
     </div>
+{:else if isLoading}
+    <p>Loading...</p>
 {:else}
-    <div class="container">
-        <div class="search-bar">
-            <label for="search">Search: </label>
-            <input type="text" bind:value={search_term} id="search" />
-            <button on:click={UpdateCache}>Update Cache</button>
-        </div>
+    <div>
         <ol>
             {#each filesCopy as file (file.id)}
                 <li><File {...file}></File></li>
