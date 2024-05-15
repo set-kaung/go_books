@@ -56,7 +56,7 @@ func main() {
 	mux.Handle("/", http.FileServer(nfs))
 
 	log.Println("running server on port 6543")
-	fmt.Println("Clicked the link to go to the interface:\nhttp://localhost:6543")
+	fmt.Println("Follow the link to go to the interface:\nhttp://localhost:6543")
 	err = http.ListenAndServe(":6543", mux)
 	if err != nil {
 		log.Fatalln("error starting server:", err)
