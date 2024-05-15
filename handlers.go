@@ -21,21 +21,30 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 	log.Println("cache update request processing...")
 	file, err := os.OpenFile("cache.json", os.O_WRONLY, 0644)
 	if err != nil {
-		http.Error(w, "can't find cache file", http.StatusInternalServerError)
+		err = ServerErrorResp(w, "cache file not found", err)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 	defer file.Close()
 	log.Println("api request started")
 	res, err := app.Service.Files.List().Q("trashed=false").Fields("nextPageToken, files(id, name, webContentLink)").Do()
 	if err != nil {
-		http.Error(w, "no response from api", http.StatusInternalServerError)
+		err = ServerErrorResp(w, "api request failed from server", err)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 	log.Println("api request ended")
 
 	encoder := json.NewEncoder(file)
 	if len(res.Files) == 0 {
-		http.Error(w, "empty file list from api", http.StatusInternalServerError)
+		err = NotFoundResp(w, "no files found", err)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 	pageToken := ""
@@ -43,7 +52,10 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 	for {
 		res, err := app.Service.Files.List().Q("trashed=false").PageToken(pageToken).Fields("nextPageToken, files(id, name, webContentLink)").Do()
 		if err != nil {
-			http.Error(w, "no response from api", http.StatusInternalServerError)
+			err = NotFoundResp(w, "no files found", err)
+			if err != nil {
+				log.Println(err)
+			}
 			return
 		}
 
@@ -62,7 +74,10 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	err = encoder.Encode(map[string][]File{"files": files})
 	if err != nil {
-		http.Error(w, "error encoding json", http.StatusInternalServerError)
+		err = ServerErrorResp(w, "failed to encode json", err)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 	log.Println("caching finished")
@@ -70,20 +85,28 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 
 func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" && r.URL.Path != "/" {
-		http.Error(w, "not found", http.StatusNotFound)
+		err := BadRequestResp(w, "method not allowed or wrong path", nil)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	file, err := os.ReadFile("cache.json")
 	if err != nil {
-		http.Error(w, "Unable to open JSON file", http.StatusInternalServerError)
-		log.Printf("Error opening JSON file: %v", err)
+		err = ServerErrorResp(w, "can't open cache file", err)
+		if err != nil {
+			log.Println("File Handler", err)
+		}
 		return
 	}
 	w.Header().Set("content-type", "application/json")
 	written, err := w.Write(file)
 	if err != nil {
-		http.Error(w, "error writing json data", http.StatusInternalServerError)
+		err = ServerErrorResp(w, "error writing json", err)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 	log.Printf("written %d as response\n", written)
