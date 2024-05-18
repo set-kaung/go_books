@@ -21,6 +21,7 @@ func openBrowser(url string) error {
 	default:
 		cmd = "xdg-open"
 	}
+	log.Printf("opening brower at %s", url)
 	return exec.Command(cmd, url).Start()
 }
 

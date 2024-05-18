@@ -15,8 +15,9 @@ import (
 )
 
 type Application struct {
-	Client  *http.Client
-	Service *drive.Service
+	Client        *http.Client
+	Service       *drive.Service
+	CacheFilePath string
 }
 
 func getClient(config *oauth2.Config) *http.Client {

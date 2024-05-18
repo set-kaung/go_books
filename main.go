@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
 	"io/fs"
 	"log"
@@ -41,8 +42,18 @@ func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 var ui embed.FS
 
 func main() {
+	port := flag.String("port", "6543", "port number to run the server on")
+	cachePath := flag.String("cache", "./cache.json", "path to cache file (cache.json)")
+	flag.Parse()
+
+	path, err := checkCacheFile(*cachePath)
+	if err != nil {
+		log.Fatalln(err)
+		return
+	}
 	mux := http.NewServeMux()
 	app, err := GetApp()
+	app.CacheFilePath = path
 	if err != nil {
 		log.Fatalf("Unable to retrieve Drive client: %v", err)
 	}
@@ -55,9 +66,9 @@ func main() {
 	mux.HandleFunc("GET /cache", app.CacheFiles)
 	mux.Handle("/", http.FileServer(nfs))
 
-	log.Println("running server on port 6543")
-	fmt.Println("Follow the link to go to the interface:\nhttp://localhost:6543")
-	err = http.ListenAndServe(":6543", mux)
+	log.Printf("running server on port :%s\n", *port)
+	fmt.Printf("Follow the link to go to the interface:\nhttp://localhost:%s\n", *port)
+	err = http.ListenAndServe(fmt.Sprintf(":%s", *port), mux)
 	if err != nil {
 		log.Fatalln("error starting server:", err)
 	}

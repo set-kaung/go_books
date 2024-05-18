@@ -7,7 +7,7 @@
 <div class="file">
     <div class="file-id">{id}</div>
     <div class="name-cont">{name}</div>
-    <div><a href={link}>Link</a></div>
+    <div><a href={link}>Download Link</a></div>
 </div>
 
 <style>
@@ -24,5 +24,15 @@
     }
     .file-id {
         display: none;
+    }
+    a:hover {
+        color: rgb(16, 129, 200);
+        transform: scale(1.5);
+    }
+    a {
+        color: rgb(57, 90, 120);
+    }
+    a:visited {
+        color: rgb(57, 90, 120);
     }
 </style>
