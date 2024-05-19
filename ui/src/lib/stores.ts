@@ -12,3 +12,7 @@ export const elapsedTime = writable(0);
 export const timer = writable<TimeoutId | null>(null);
 export const searchTerm = writable("");
 export const files = writable([]);
+export const extensions = writable<string[]>([]);
+export const extensionMode = writable(false);
+export const pdfChecked = writable(false);
+export const epubChecked = writable(false);

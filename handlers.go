@@ -9,10 +9,11 @@ import (
 	"strings"
 )
 
-type File struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Link string `json:"link"`
+type BookFile struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Link      string `json:"link"`
+	Extension string `json:"ext"`
 }
 
 var ErrNoFiles = errors.New("no files found")
@@ -49,7 +50,7 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pageToken := ""
-	files := []File{}
+	files := []BookFile{}
 	for {
 		res, err := app.Service.Files.List().Q("trashed=false").PageToken(pageToken).Fields("nextPageToken, files(id, name, webContentLink)").Do()
 		if err != nil {
@@ -62,7 +63,7 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 
 		for _, f := range res.Files {
 			if strings.Contains(f.Name, ".pdf") || strings.Contains(f.Name, ".epub") {
-				file := File{ID: f.Id, Name: f.Name, Link: f.WebContentLink}
+				file := BookFile{ID: f.Id, Name: f.Name, Link: f.WebContentLink}
 				files = append(files, file)
 			}
 		}
@@ -74,7 +75,7 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 		pageToken = res.NextPageToken
 	}
 	log.Println("api request ended")
-	err = encoder.Encode(map[string][]File{"files": files})
+	err = encoder.Encode(map[string][]BookFile{"files": files})
 	if err != nil {
 		err = ServerErrorResp(w, "failed to encode json", err)
 		if err != nil {

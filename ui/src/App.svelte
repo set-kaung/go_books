@@ -6,7 +6,7 @@
     import * as DStores from "./lib/stores";
     import { onMount } from "svelte";
     import { FetchFiles } from "./lib/DataUpdate";
-
+    import { isExtInList } from "./lib/Utils";
     let filesCopy;
     let search_term = "";
     let files = [];
@@ -17,6 +17,7 @@
     let dupes = false;
     let timer;
     let elapsedTime;
+    let extensionMod;
 
     DStores.duplicateMode.subscribe((dup) => {
         dupes = dup;
@@ -50,17 +51,33 @@
         files = f;
     });
 
+    let extensionsList: string[] = [];
+
+    DStores.extensionMode.subscribe((v) => (extensionMod = v));
+
+    DStores.extensions.subscribe((v) => {
+        extensionsList = v;
+    });
+
     onMount(() => {
         FetchFiles();
     });
 
     $: {
-        if (dupes) {
-            filesCopy = findDuplicates(files);
-        } else {
+        filesCopy = files;
+
+        if (search_term != "") {
             filesCopy = files.filter((x: File) => {
-                let name: string = x["name"];
-                return name.toLowerCase().includes(search_term.toLowerCase());
+                let fName: string = x["name"];
+                return fName.toLowerCase().includes(search_term.toLowerCase());
+            });
+        }
+        if (dupes) {
+            filesCopy = findDuplicates(filesCopy);
+        }
+        if (extensionMod && extensionsList.length != 0) {
+            filesCopy = filesCopy.filter((x: File) => {
+                return isExtInList(x["name"], extensionsList);
             });
         }
     }
