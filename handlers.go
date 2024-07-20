@@ -18,9 +18,9 @@ type BookFile struct {
 
 var ErrNoFiles = errors.New("no files found")
 
-func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
+func (app *Application) CacheFileHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("cache update request processing...")
-	file, err := os.OpenFile("cache.json", os.O_WRONLY|os.O_TRUNC, 0644)
+	_, err := os.Open(app.CacheFilePath)
 	if err != nil {
 		err = ServerErrorResp(w, "cache file not found", err)
 		if err != nil {
@@ -29,18 +29,16 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer file.Close()
 	log.Println("api request started")
 	res, err := app.Service.Files.List().Q("trashed=false").Fields("nextPageToken, files(id, name, webContentLink)").Do()
 	if err != nil {
+		log.Println(err)
 		err = ServerErrorResp(w, "api request failed from server", err)
 		if err != nil {
 			log.Println(err)
 		}
 		return
 	}
-
-	encoder := json.NewEncoder(file)
 
 	if len(res.Files) == 0 {
 		err = NotFoundResp(w, "no files found", err)
@@ -74,6 +72,15 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 
 		pageToken = res.NextPageToken
 	}
+	file, err := os.OpenFile(app.CacheFilePath, os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		err = ServerErrorResp(w, "faile to open cache file", err)
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+	encoder := json.NewEncoder(file)
 	log.Println("api request ended")
 	err = encoder.Encode(map[string][]BookFile{"files": files})
 	if err != nil {
@@ -84,6 +91,7 @@ func (app *Application) CacheFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("caching finished")
+	file.Close()
 }
 
 func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +103,7 @@ func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	file, err := os.ReadFile("cache.json")
+	fileData, err := os.ReadFile(app.CacheFilePath)
 	if err != nil {
 		err = ServerErrorResp(w, "can't open cache file", err)
 		if err != nil {
@@ -104,7 +112,7 @@ func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	written, err := w.Write(file)
+	written, err := w.Write(fileData)
 	if err != nil {
 		err = ServerErrorResp(w, "error writing json", err)
 		if err != nil {

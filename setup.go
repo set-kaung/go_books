@@ -70,8 +70,8 @@ func tokenFromFile(filename string) (*oauth2.Token, error) {
 	return tok, nil
 }
 
-func GetApp() (Application, error) {
-	app := Application{}
+func GetApp(cfilePath string) (Application, error) {
+	app := Application{CacheFilePath: cfilePath}
 	ctx := context.Background()
 	b, err := os.ReadFile("credentials.json")
 	if err != nil {

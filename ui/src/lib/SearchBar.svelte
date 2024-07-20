@@ -55,7 +55,7 @@
                     bind:checked={$pdfChecked}
                     on:change={updateExtensionsToFilter}
                 />
-                <label for="pdf">PDF</label>
+                <label for="pdf">pdf</label>
                 <input
                     type="checkbox"
                     name="epub"
@@ -63,7 +63,7 @@
                     bind:checked={$epubChecked}
                     on:change={updateExtensionsToFilter}
                 />
-                <label for="epub">Epub</label>
+                <label for="epub">epub</label>
             </div>
         {/if}
     </div>
@@ -100,5 +100,9 @@
         justify-content: center;
         gap: 0.5rem;
         padding: 5px;
+    }
+
+    #extension-list {
+        font-size: 0.95rem;
     }
 </style>

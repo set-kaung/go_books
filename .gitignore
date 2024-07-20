@@ -3,3 +3,5 @@ credentials.json
 .txt
 token.json
 go_books
+.DS_Store
+.clocignore
