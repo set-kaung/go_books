@@ -1,33 +1,16 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 )
-
-type BookFile struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Link      string `json:"link"`
-	Extension string `json:"ext"`
-}
 
 var ErrNoFiles = errors.New("no files found")
 
 func (app *Application) CacheFileHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("cache update request processing...")
-	_, err := os.Open(app.CacheFilePath)
-	if err != nil {
-		err = ServerErrorResp(w, "cache file not found", err)
-		if err != nil {
-			log.Println(err)
-		}
-		return
-	}
 
 	log.Println("api request started")
 	res, err := app.Service.Files.List().Q("trashed=false").Fields("nextPageToken, files(id, name, webContentLink)").Do()
@@ -50,7 +33,7 @@ func (app *Application) CacheFileHandler(w http.ResponseWriter, r *http.Request)
 	pageToken := ""
 	files := []BookFile{}
 	for {
-		res, err := app.Service.Files.List().Q("trashed=false").PageToken(pageToken).Fields("nextPageToken, files(id, name, webContentLink)").Do()
+		res, err = app.Service.Files.List().Q("trashed=false").PageToken(pageToken).Fields("nextPageToken, files(id, name, webContentLink)").Do()
 		if err != nil {
 			err = NotFoundResp(w, "no files found", err)
 			if err != nil {
@@ -72,26 +55,27 @@ func (app *Application) CacheFileHandler(w http.ResponseWriter, r *http.Request)
 
 		pageToken = res.NextPageToken
 	}
-	file, err := os.OpenFile(app.CacheFilePath, os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		err = ServerErrorResp(w, "faile to open cache file", err)
-		if err != nil {
-			log.Println(err)
-		}
-		return
-	}
-	encoder := json.NewEncoder(file)
+
 	log.Println("api request ended")
-	err = encoder.Encode(map[string][]BookFile{"files": files})
+
+	err = app.LocalCache.WriteData(files)
 	if err != nil {
-		err = ServerErrorResp(w, "failed to encode json", err)
+		err = ServerErrorResp(w, "failed to write to cache file", err)
 		if err != nil {
 			log.Println(err)
 		}
 		return
 	}
+	err = app.Database.WriteData(files)
+	if err != nil {
+		err = ServerErrorResp(w, "failed to write to Database", err)
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
 	log.Println("caching finished")
-	file.Close()
 }
 
 func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
@@ -103,9 +87,9 @@ func (app *Application) FileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileData, err := os.ReadFile(app.CacheFilePath)
+	fileData, err := app.Database.ReadData()
 	if err != nil {
-		err = ServerErrorResp(w, "can't open cache file", err)
+		err = ServerErrorResp(w, "can't read from database file", err)
 		if err != nil {
 			log.Println("File Handler", err)
 		}

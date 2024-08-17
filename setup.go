@@ -15,9 +15,21 @@ import (
 )
 
 type Application struct {
-	Client        *http.Client
-	Service       *drive.Service
-	CacheFilePath string
+	Client     *http.Client
+	Service    *drive.Service
+	LocalCache JSONReadWriter
+	Database   JSONReadWriter
+}
+type BookFile struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Link      string `json:"link"`
+	Extension string `json:"ext"`
+}
+
+type JSONReadWriter interface {
+	WriteData([]BookFile) error
+	ReadData() ([]byte, error)
 }
 
 func getClient(config *oauth2.Config) *http.Client {
@@ -71,7 +83,8 @@ func tokenFromFile(filename string) (*oauth2.Token, error) {
 }
 
 func GetApp(cfilePath string) (Application, error) {
-	app := Application{CacheFilePath: cfilePath}
+	app := Application{LocalCache: &CacheFile{cfilePath}}
+	app.Database = NewDatabase("./books.db")
 	ctx := context.Background()
 	b, err := os.ReadFile("credentials.json")
 	if err != nil {

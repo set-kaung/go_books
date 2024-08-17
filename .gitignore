@@ -5,3 +5,4 @@ token.json
 go_books
 .DS_Store
 .clocignore
+books.db

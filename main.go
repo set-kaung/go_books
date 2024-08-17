@@ -53,7 +53,6 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	app, err := GetApp(path)
-	app.CacheFilePath = path
 	if err != nil {
 		log.Fatalf("Unable to retrieve Drive client: %v", err)
 	}
@@ -61,6 +60,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 	nfs := neuteredFileSystem{fileSys: http.FS(dir)}
 	mux.HandleFunc("/files", app.FileHandler)
 	mux.HandleFunc("GET /cache", app.CacheFileHandler)
