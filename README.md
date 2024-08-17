@@ -1,7 +1,7 @@
 # Go Books
 
 ## Introduction
-This is an attempt to use Google API to creat a simple interface and minimal dependencies to search and download ebooks files (.pdf and .epub) from personal drive storage(Google Drive). ~~I used a cache file to minimise api calls but included a button to update cache file when needed.~~ Implements a cache file as well as sqlite database to reduces api calls.
+This is an attempt to use Google API to creat a simple interface and minimal dependencies to search and download ebooks files (.pdf and .epub) from personal drive storage(Google Drive). ~~I used a cache file to minimise api calls but included a button to update cache file when needed.~~ Implements a cache file as well as sqlite database to reduces API calls.
 
  Also a way to find duplicate books in drive.
 
