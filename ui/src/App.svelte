@@ -16,7 +16,7 @@
     let error = "";
     let dupes = false;
     let timer;
-    let elapsedTime;
+    // let elapsedTime;
     let extensionMod;
 
     DStores.duplicateMode.subscribe((dup) => {
@@ -37,10 +37,6 @@
 
     DStores.timer.subscribe((tim) => {
         timer = tim;
-    });
-
-    DStores.elapsedTime.subscribe((et) => {
-        elapsedTime = et;
     });
 
     DStores.searchTerm.subscribe((search) => {

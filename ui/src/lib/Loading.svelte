@@ -1,15 +1,8 @@
 <script lang="ts">
-    import { elapsedTime } from "./stores";
-    let elapsed: number;
-
-    elapsedTime.subscribe((val) => {
-        elapsed = val;
-    });
 </script>
 
 <div class="loading">
     <h1>Loading Data</h1>
-    <h3>Elaped Time: {elapsed}</h3>
 </div>
 
 <style>

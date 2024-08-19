@@ -42,17 +42,16 @@ func (nfs neuteredFileSystem) Open(path string) (http.File, error) {
 var ui embed.FS
 
 func main() {
-	port := flag.String("port", "6543", "port number to run the server on")
-	cachePath := flag.String("cache", "./cache.json", "path to cache file (cache.json)")
-	flag.Parse()
 
-	path, err := checkCacheFile(*cachePath)
+	port := flag.String("port", "6543", "port number to run the server on")
+
+	flag.Parse()
+	entries, err := createLocalSources()
 	if err != nil {
-		log.Fatalln(err)
-		return
+		panic(err)
 	}
 	mux := http.NewServeMux()
-	app, err := GetApp(path)
+	app, err := GetApp(entries["cache.json"], *port)
 	if err != nil {
 		log.Fatalf("Unable to retrieve Drive client: %v", err)
 	}
@@ -62,8 +61,10 @@ func main() {
 	}
 
 	nfs := neuteredFileSystem{fileSys: http.FS(dir)}
-	mux.HandleFunc("/files", app.FileHandler)
-	mux.HandleFunc("GET /cache", app.CacheFileHandler)
+	mux.HandleFunc("/cache", handlePreflight(app.CacheFileHandler))
+	mux.HandleFunc("/files", handlePreflight(app.FileHandler))
+	mux.HandleFunc("GET /auth", app.Authorise)
+	mux.HandleFunc("GET /callback", app.Callback)
 	mux.Handle("/", http.FileServer(nfs))
 
 	log.Printf("running server on port :%s\n", *port)
