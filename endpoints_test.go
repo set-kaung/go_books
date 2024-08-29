@@ -13,7 +13,7 @@ func TestFileHandlersOk(t *testing.T) {
 	}
 
 	responseRecorder := httptest.NewRecorder()
-	app, err := GetApp("./cache.json", "6543")
+	app, err := GetApp("./cache.json")
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +31,7 @@ func TestFileHandlerFileError(t *testing.T) {
 	}
 
 	responseRecorder := httptest.NewRecorder()
-	app, err := GetApp("./deada.json", ":6868")
+	app, err := GetApp("./deada.json")
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +49,7 @@ func TestCacheHandlerOK(t *testing.T) {
 	}
 
 	responseRecorder := httptest.NewRecorder()
-	app, err := GetApp("./cache.json", "6543")
+	app, err := GetApp("./cache.json")
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +67,7 @@ func TestCacheHandlerSvrError(t *testing.T) {
 	}
 
 	responseRecorder := httptest.NewRecorder()
-	app, err := GetApp("./cache.json", "6543")
+	app, err := GetApp("./ewrer.json")
 	if err != nil {
 		panic(err)
 	}
